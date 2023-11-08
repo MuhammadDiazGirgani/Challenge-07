@@ -1,53 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaPlay } from 'react-icons/fa';
+import { FaPlay, FaSearch } from 'react-icons/fa';
 import { BsArrowRight } from 'react-icons/bs';
-import { FaSearch } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from "axios";
 import './index.css'
+import { getMe, getPopularMovies } from '../redux/actions/authActions';
+import { getSearchMovies } from '../redux/actions/authActions'; 
+import { fetchData } from '../redux/actions/authActions'; 
+import { useDispatch, useSelector } from 'react-redux';
 
 function Home() {
-  const [movies, setMovies] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [setLoading] = useState(true);
+  const [text, setText] = useState('');
+  const [refreshing, setRefreshing] = useState(true);
   const [upcomingMovies, setUpcomingMovies] = useState([]);
   const token = localStorage.getItem('token');
-
+  const user = useSelector((state) => state.auth.user);
+  const dispatch = useDispatch();
+  const popularMovies = useSelector(state => state.auth.popularMovies);
+  
   useEffect(() => {
-    const fetchPopularMovies = async () => {
-      try {
-        const response = await axios.get('https://shy-cloud-3319.fly.dev/api/v1/movie/popular', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setMovies(response.data.data);
-      } catch (error) {
-        console.error('Error fetching popular movies:', error);
-      }
-    };
-
     if (token) {
-      fetchPopularMovies();
+      dispatch(getPopularMovies(token)); 
+      dispatch(fetchData(token, text, refreshing));
+      dispatch(getMe());
     }
-  }, [token]);
-
-  const fetchMovies = async (endpoint) => {
-    try {
-      setLoading(true);
-      const response = await axios.get(endpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setMovies(response.data.data);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [token, dispatch]);
+  
+  useEffect(() => {
+    dispatch(fetchData(token, refreshing));
+  }, [text, refreshing, token]);
 
   useEffect(() => {
     const fetchUpcomingMovies = async () => {
@@ -79,18 +62,15 @@ function Home() {
 
     fetchUpcomingMovies();
   }, []);
-
-
-
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
   };
 
   const handleSearch = () => {
-    const endpoint = `${'https://shy-cloud-3319.fly.dev/api/v1/search/movie?page=1&query='}${searchQuery}`;
-    fetchMovies(endpoint);
+    if (searchQuery) {
+      dispatch(getSearchMovies(token, searchQuery));
+    }
   };
-  
 
   return (
     <div>
@@ -153,25 +133,37 @@ function Home() {
           <span className="visually-hidden">Next</span>
         </button>
       </div>
-
+      {token && user && (
+        <div className='username' style={{paddingTop:'40px', paddingLeft:'60px'}}>
+          <h4>Welcome, {user.name}</h4>
+        </div>
+      )}
 
       <div className="p-5 mb-4 bg-light rounded-3">
         <div className="container-fluid py-5">
-        <h2 className="display-5 " style={{ fontSize: '40px', fontWeight: '600', marginTop: '-50px', paddingBottom: '25px' }}>
+        <h2 className="display-5 " style={{ fontSize: '40px', fontWeight: '600', marginTop: '-80px', paddingBottom: '25px' }}>
             <Link to="/" style={{ color: '#D90811', textDecoration: 'none' }}>Popular Movie</Link>
           </h2>
           <h3 className="" style={{ fontSize: '22px', fontWeight: '600', marginTop: '-70px', paddingBottom: '25px', textAlign: 'right', color: '#D90811' }}>
             See All Movies <BsArrowRight style={{ marginLeft: '5px', fontSize: '20px' }} />
           </h3>
+          <div>
+    </div>
+   
           <div className="mb-3" style={{ position: 'relative' }}>
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Search for movies..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-          style={{ borderRadius: '999px', borderColor: '#D90811', color: '#000', paddingRight: '40px' }}
-        />
+          <input
+  type="text"
+  className="form-control"
+  placeholder="Search for movies..."
+  value={searchQuery}
+  onChange={handleSearchChange}
+  onKeyPress={(e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  }}
+  style={{ borderRadius: '999px', borderColor: '#D90811', color: '#000', paddingRight: '40px' }}
+/>
         <FaSearch
           onClick={handleSearch}
           style={{
@@ -186,7 +178,7 @@ function Home() {
 
           {token ? (
             <div className="row row-cols-1 row-cols-md-4 g-4 mt-4">
-              {movies.map((movie) => (
+              {popularMovies.map((movie) => (
                 <div key={movie.id} className="col">
                   <Link to={`/movie/${movie.id}`} style={{ textDecoration: 'none' }}>
                     <div className="card h-100" style={{ border: '1px solid #ddd', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
