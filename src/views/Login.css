@@ -1,0 +1,20 @@
+
+body {
+  font-family: 'Arial', sans-serif;
+}
+
+
+.btn-primary {
+  border-color: #D90811;
+  width: 20%;
+  background-color:#D90811 ;
+  border-radius: 999px; 
+  border-radius: #D90811; 
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background-color: #9d1b0a;
+  border-color: #9d1b0a;
+}

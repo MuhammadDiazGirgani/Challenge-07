@@ -1,0 +1,20 @@
+
+.carousel-control-next {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+.carousel-control-prev{
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.carousel:hover .carousel-control-next {
+    opacity: 0;
+    pointer-events: auto;
+}
+.carousel:hover .carousel-control-prev{
+    opacity: 0;
+    pointer-events: auto;
+}
